@@ -138,11 +138,20 @@ def _render_3d_viewer_page():
         st.error("3D viewer assets are missing. Ensure the 'heart-master' folder is present.")
         return
 
-    try:
-        port = _start_heart_viewer_server()
-    except Exception as exc:
-        st.error(f"Unable to launch 3D viewer: {exc}")
-        return
+    # On Streamlit Community Cloud the browser cannot reach a localhost server,
+    # so the viewer is served from GitHub Pages (same files, backend/heart-master).
+    on_cloud = os.path.exists("/mount/src") or os.getenv("HEART_VIEWER_BASE_URL")
+    viewer_base = os.getenv(
+        "HEART_VIEWER_BASE_URL",
+        "https://jpoojaj.github.io/transformer-heart-disease-prediction-system/backend/heart-master",
+    )
+    port = None
+    if not on_cloud:
+        try:
+            port = _start_heart_viewer_server()
+        except Exception as exc:
+            st.error(f"Unable to launch 3D viewer: {exc}")
+            return
 
     c1, c2, c3 = st.columns([1, 1, 1])
     with c1:
@@ -219,7 +228,10 @@ def _render_3d_viewer_page():
     query = "&".join([f"{k}={v}" for k, v in qs.items()])
 
     # Use the dedicated minimal viewer page so only the 3D heart UI is shown
-    iframe_url = f"http://127.0.0.1:{port}/viewer.html?{query}"
+    iframe_url = (
+        f"{viewer_base}/viewer.html?{query}" if on_cloud
+        else f"http://127.0.0.1:{port}/viewer.html?{query}"
+    )
 
     st.subheader("Interactive 3D Model")
     components.html(
@@ -2436,23 +2448,17 @@ def show_risk_prediction_page(predictor_ready: bool):
         # Risk Meter Card
         st.subheader("Risk Meter")
         
-        # Placeholder for risk meter (will be updated when calculation is done)
-        st.info("Risk meter will be displayed after calculation")
         
         # Top Risk Factors Card
         st.subheader("Top Risk Factors")
-        st.info("Risk factors will be displayed after calculation")
         
         # Recommended Actions Card
         st.subheader("Recommended Actions")
-        st.info("Recommendations will be displayed after calculation")
         
     # Bottom section for charts and additional features
     st.subheader("Feature Importance")
-    st.info("Feature importance chart will be displayed after calculation")
     
     st.subheader("Risk Over Time")
-    st.info("Risk trend chart will be displayed after calculation")
 
     # Handle form submission
     if submitted:
