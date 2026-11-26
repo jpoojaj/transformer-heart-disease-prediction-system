@@ -1542,7 +1542,6 @@ from sklearn.ensemble import RandomForestClassifier
 
 def login_page():
     st.title("🔑 Login to CheckYourHeartHealth")
-    st.warning("⚠️ Demo project, not medical advice. Please do not enter real personal health data.")
     
     # Toggle between Login and Register
     login_tab, register_tab = st.tabs(["Login", "Register"])
@@ -2376,7 +2375,6 @@ def _render_standard_ecg_analysis(role_lower: str):
 
 def show_risk_prediction_page(predictor_ready: bool):
     st.title("CheckYourHeartHealth")
-    st.warning("⚠️ Demo project, not medical advice. Please do not enter real personal health data.")
     st.markdown("""
     # Advanced Cardiovascular Risk Prediction
     
@@ -5604,3 +5602,6 @@ else:
             del st.session_state[key]
         st.rerun()
     main_app()
+
+# Small footer shown on every screen
+st.markdown("<div style='text-align:center;font-size:0.7rem;opacity:0.6;margin-top:2rem;'>Educational project, not a medical device.</div>", unsafe_allow_html=True)

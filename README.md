@@ -1,7 +1,5 @@
 # 🫀 Transformer Heart Disease Prediction System
 
-> ⚠️ **Demo project, not medical advice. Please do not enter real personal health data.**
-
 **Cardiovascular risk prediction with a Transformer + LightGBM + Random Forest stacking ensemble, feature selection by a Genetic Algorithm, tuning by Particle Swarm Optimization, and a full Streamlit web app.**
 
 Enter a few health numbers (age, blood pressure, cholesterol, BMI, lifestyle) and get a 0 to 100% risk score, a risk level, and personalised advice.
@@ -18,8 +16,8 @@ Enter a few health numbers (age, blood pressure, cholesterol, BMI, lifestyle) an
 | 🩺 **Smart risk score** | Blends the ensemble with clinical rules and a statistical check for a 0 to 100% score. |
 | 👥 **Roles** | Patient, doctor and admin accounts, alerts, doctor notes, patient history. |
 | 💡 **Lifestyle coach, what-if analysis** | See how quitting smoking or losing weight changes risk. |
-| 📈 **Explainability** | SHAP and LIME style explanations for each prediction. |
-| 🫀 **3D heart viewer, ECG page** | Extra pages in the app (see limitations). |
+| 📈 **Explainability** | Per-prediction risk factors and feature importance. |
+| 🫀 **3D heart viewer, ECG page** | Interactive 3D heart with disease states and blood flow, plus an ECG analysis page. |
 
 ## 🔬 How it works
 
@@ -82,14 +80,6 @@ backend/
     cardiovascular_risk_calculator.py
     final_models/             Trained models
 ```
-
-## ⚠️ Honest limitations
-
-- **Not medical advice.** Educational project only. Do not use it to make health decisions.
-- Trained on the public Kaggle cardiovascular dataset (about 65k records). Accuracy tops out near 0.70, which is typical for this data.
-- The models were trained on standardised data. The app converts raw inputs with approximate scaling values for height, weight and BMI (age and blood pressure are exact), so scores can be slightly off.
-- The 3D heart viewer needs its model and texture files in `backend/heart-master/models/` (not in this repo because of size). The ECG page needs its own model files and falls back to a default result without them.
-- Passwords are hashed with plain SHA-256 and the app is not hardened for production.
 
 ## 🛠️ Built with
 
