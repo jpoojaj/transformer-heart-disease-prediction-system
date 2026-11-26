@@ -5,7 +5,7 @@ import { MTLLoader } from './MTLLoader.js';
 import { OBJLoader } from './OBJLoader.js';
 import { TrackballControls } from './TrackballControls.js';
 	
-const BASE_URL = 'http://mattschroyer.github.io/heart/models/';
+const BASE_URL = new URL('../models/', import.meta.url).href;
 
 // Read initial configuration (disease state, progression, lifestyle toggles, etc.)
 // that may be passed via query parameters from the hosting app (Streamlit).
@@ -1171,12 +1171,12 @@ function setDiseaseState(stateName) {
 
 	new MTLLoader(manager)
 		.setPath(BASE_URL)
-		.load( 'heartpartLD1.mtl', function (materials) {
+		.load( 'heart1.mtl', function (materials) {
 			materials.preload();
 			new OBJLoader(manager)
 				.setMaterials(materials)
 				.setPath(BASE_URL)
-				.load( 'heartpartLD1.obj', function (object) {
+				.load( 'heart1.obj', function (object) {
 					object.position.x= -7.600000000000003; object.position.y= -9.399999999999999; object.position.z= 24.199999999999946;
 					object.rotation.x= -1.6000000000000008; object.rotation.y= 0.44999999999999996; object.rotation.z= 0.05000000000000002;
 					object.scale.x= 3.949999999999994; object.scale.y= 3.949999999999994; object.scale.z= 3.949999999999994;
