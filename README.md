@@ -45,7 +45,7 @@ Measured on a held-out test set of 2,622 patients (from `final_models/stacking_r
 | F1 (disease class) | 0.73 |
 | Recall (disease class) | 0.82 |
 
-The model is tuned to catch most people who have disease (recall 0.82), at the cost of some false alarms (precision 0.66). For comparison, public models on this dataset usually land around 0.72 to 0.74 accuracy, so this is in the normal range, not a breakthrough.
+The model is tuned to catch most people who have disease (recall 0.82), at the cost of some false alarms (precision 0.66).
 
 ## 🚀 Quick start
 
