@@ -1,0 +1,7 @@
+{
+  "accuracy": 0.6983218916857361,
+  "f1_score": 0.7346528010734653,
+  "auc": 0.791078254908499,
+  "best_threshold": 0.5,
+  "classification_report": "              precision    recall  f1-score   support\n\n           0       0.76      0.57      0.65      1293\n           1       0.66      0.82      0.73      1329\n\n    accuracy                           0.70      2622\n   macro avg       0.71      0.70      0.69      2622\nweighted avg       0.71      0.70      0.69      2622\n"
+}

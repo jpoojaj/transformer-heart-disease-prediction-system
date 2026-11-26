@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<!-- oheart6 adds and checks annotations programmatically -->
+
+<html lang="en">
+	<head>
+		<title>CheckYourHeartHealth — Risk Studio</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			:root {
+				color-scheme: dark;
+				--bg: #05060c;
+				--bg-soft: #0b0d17;
+				--bg-card: #111322;
+				--bg-card-alt: #16182b;
+				--stroke: rgba(255, 255, 255, 0.06);
+				--stroke-strong: rgba(255, 255, 255, 0.12);
+				--text-main: #f3f5ff;
+				--text-muted: #9ea3bc;
+				--accent: #ff3c6a;
+				--accent-soft: #ff6b81;
+				--accent-yellow: #f3c96a;
+				--accent-green: #6fe3c7;
+				--card-radius: 20px;
+				--shadow: 0 25px 45px rgba(5, 6, 12, 0.65);
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				font-family: "Inter", "Segoe UI", "Open Sans", sans-serif;
+				/* Single background image for the whole page */
+				background: url('assets.jpg') center/cover fixed no-repeat #05060c;
+				color: var(--text-main);
+				margin: 0;
+				min-height: 100vh;
+				padding: 0 24px 48px;
+				position: relative;
+				overflow-x: hidden;
+			}
+			/* No additional overlay so the background image stays clear */
+			body::before {
+				content: none;
+			}
+			body.hide-viewer-ui #activate,
+			body.hide-viewer-ui #annotation_panel,
+			body.hide-viewer-ui #info,
+			body.hide-viewer-ui #disease_compare,
+			body.hide-viewer-ui #disease_info_panel,
+			body.hide-viewer-ui #what_if_panel {
+				display: none !important;
+			}
+			.app-shell {
+				max-width: 1240px;
+				margin: 0 auto;
+			}
+			.topbar {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				padding: 24px 0 12px;
+			}
+			.brand {
+				display: flex;
+				align-items: center;
+				gap: 12px;
+			}
+			.brand-icon {
+				width: 44px;
+				height: 44px;
+				border-radius: 12px;
+				background: radial-gradient(circle at 30% 20%, #ff7b92, #ff3c6a);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 22px;
+			}
+			.search-bar {
+				flex: 1;
+				margin: 0 40px;
+				border-radius: 999px;
+				border: 1px solid var(--stroke);
+				background: rgba(255,255,255,0.03);
+				padding: 10px 18px;
+				color: var(--text-main);
+			}
+			.search-bar::placeholder {
+				color: var(--text-muted);
+			}
+			.topbar-actions {
+				display: flex;
+				gap: 14px;
+			}
+			.icon-button {
+				width: 42px;
+				height: 42px;
+				border-radius: 50%;
+				border: 1px solid var(--stroke);
+				background: rgba(255,255,255,0.03);
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				color: var(--text-main);
+				cursor: pointer;
+			}
+			.tab-nav {
+				display: flex;
+				gap: 18px;
+				margin-bottom: 32px;
+				flex-wrap: wrap;
+			}
+			.tab-nav button {
+				background: transparent;
+				border: none;
+				color: var(--text-muted);
+				font-size: 15px;
+				padding-bottom: 10px;
+				border-bottom: 2px solid transparent;
+				cursor: pointer;
+			}
+			.tab-nav button.active {
+				color: var(--text-main);
+				border-bottom-color: var(--accent);
+			}
+			.hero {
+				margin-bottom: 28px;
+			}
+			.hero h1 {
+				margin: 6px 0 0;
+				font-weight: 600;
+				font-size: 32px;
+			}
+			.hero p {
+				margin: 0;
+				color: var(--text-muted);
+			}
+			.grid {
+				display: grid;
+				gap: 20px;
+			}
+			.primary-grid {
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+				margin-bottom: 28px;
+			}
+			.secondary-grid {
+				grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+				margin-bottom: 32px;
+			}
+			.disease-grid {
+				grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+				margin-bottom: 40px;
+				align-items: stretch;
+			}
+			.viewer-grid {
+				grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+				align-items: stretch;
+				gap: 24px;
+			}
+			@media (max-width: 1024px) {
+				.viewer-grid {
+					grid-template-columns: 1fr;
+				}
+			}
+			.card {
+				background: linear-gradient(145deg, var(--bg-card), var(--bg-card-alt));
+				border-radius: var(--card-radius);
+				border: 1px solid var(--stroke);
+				padding: 24px;
+				box-shadow: var(--shadow);
+			}
+			.card h2,
+			.card h3 {
+				margin-top: 0;
+				margin-bottom: 12px;
+				font-size: 18px;
+			}
+			.detail-list {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+				border-top: 1px solid var(--stroke);
+			}
+			.detail-list li {
+				display: flex;
+				justify-content: space-between;
+				padding: 14px 0;
+				border-bottom: 1px solid var(--stroke);
+				color: var(--text-muted);
+			}
+			.detail-list span {
+				color: var(--text-main);
+			}
+			.risk-card {
+				background: radial-gradient(circle at 20% 20%, rgba(255,60,106,0.3), rgba(17,19,34,0.95));
+			}
+			.risk-percentage {
+				font-size: 48px;
+				font-weight: 600;
+				margin: 0;
+			}
+			.risk-meter {
+				display: flex;
+				gap: 4px;
+				margin: 12px 0 18px;
+			}
+			.risk-meter span {
+				flex: 1;
+				height: 6px;
+				border-radius: 999px;
+				background: rgba(255,255,255,0.15);
+			}
+			.risk-meter span:nth-child(1) { background: var(--accent-green); }
+			.risk-meter span:nth-child(2) { background: var(--accent-yellow); }
+			.risk-meter span:nth-child(3) { background: var(--accent); }
+			.chip-list {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-bottom: 12px;
+			}
+			.chip {
+				padding: 6px 12px;
+				border-radius: 999px;
+				border: 1px solid var(--stroke);
+				background: rgba(255,255,255,0.04);
+				font-size: 13px;
+				color: var(--text-muted);
+			}
+			.chart-card {
+				min-height: 220px;
+				position: relative;
+			}
+			.chart-placeholder {
+				position: absolute;
+				inset: 24px;
+				border-radius: 16px;
+				background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+				overflow: hidden;
+			}
+			.chart-placeholder::after {
+				content: "";
+				position: absolute;
+				left: 24px;
+				right: 24px;
+				bottom: 32px;
+				top: 32px;
+				background: linear-gradient(120deg, rgba(255,60,106,0.25), rgba(111,227,199,0.25));
+				clip-path: polygon(0% 70%, 20% 60%, 36% 58%, 52% 50%, 74% 40%, 100% 20%, 100% 100%, 0% 100%);
+				filter: drop-shadow(0 10px 20px rgba(255,60,106,0.35));
+			}
+			.viewer-card {
+				padding: 0;
+				display: flex;
+				flex-direction: column;
+			}
+			.viewer-header {
+				padding: 24px 24px 0;
+			}
+			.viewer-layout {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 20px;
+				padding: 24px;
+			}
+			.viewer-stage {
+				flex: 2 1 420px;
+				min-height: 420px;
+				border-radius: 16px;
+				border: 1px solid var(--stroke);
+				background: #05060c;
+				overflow: hidden;
+				position: relative;
+			}
+			#heart-app {
+				width: 100%;
+				height: 100%;
+				position: relative;
+			}
+			#threeCanvas {
+				width: 100%;
+				height: 100%;
+				display: block;
+			}
+			.control-stack {
+				flex: 1 1 280px;
+				display: flex;
+				flex-direction: column;
+				gap: 16px;
+			}
+			.hud-card {
+				flex: 1;
+				background: rgba(255,255,255,0.02);
+				border-radius: 18px;
+				border: 1px solid var(--stroke);
+				padding: 18px 20px;
+			}
+			.control-card label {
+				display: block;
+				margin-bottom: 8px;
+				font-size: 13px;
+				letter-spacing: 0.06em;
+				text-transform: uppercase;
+				color: var(--text-muted);
+			}
+			.pill-select,
+			.control-card input[type="range"] {
+				width: 100%;
+			}
+			.pill-select {
+				border-radius: 12px;
+				background: rgba(255,255,255,0.04);
+				border: 1px solid var(--stroke);
+				color: var(--text-main);
+				padding: 10px 12px;
+				font-size: 14px;
+			}
+			.range-value {
+				display: flex;
+				justify-content: space-between;
+				font-size: 12px;
+				color: var(--text-muted);
+				margin-top: 6px;
+			}
+			.toggle-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+				gap: 10px;
+				margin-top: 16px;
+			}
+			.toggle-grid input {
+				display: none;
+			}
+			.toggle-grid label {
+				border-radius: 12px;
+				border: 1px solid var(--stroke);
+				padding: 8px 12px;
+				font-size: 13px;
+				color: var(--text-muted);
+				cursor: pointer;
+				transition: border 0.2s ease, color 0.2s ease, background 0.2s ease;
+			}
+			.toggle-grid input:checked + label {
+				background: rgba(255,60,106,0.12);
+				border-color: var(--accent);
+				color: var(--text-main);
+			}
+			.control-actions {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 10px;
+			}
+			.button,
+			select.button {
+				background: linear-gradient(130deg, #ff4d78, #ff2757);
+				border: none;
+				color: #fff;
+				padding: 12px 20px;
+				border-radius: 12px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: transform 0.2s ease, box-shadow 0.2s ease;
+				font-size: 14px;
+			}
+			.button:hover,
+			select.button:hover {
+				transform: translateY(-1px);
+				box-shadow: 0 15px 30px rgba(255, 60, 106, 0.35);
+			}
+			.annotation-panel {
+				background: rgba(255,255,255,0.02);
+				border: 1px solid var(--stroke);
+				border-radius: 18px;
+				padding: 18px;
+			}
+			.annotation-panel.hidden {
+				display: none;
+			}
+			.annotation-panel h3 {
+				margin: 0 0 6px;
+				font-size: 17px;
+			}
+			.annotation-panel p {
+				margin: 6px 0;
+				color: var(--text-muted);
+			}
+			.annotation-panel button {
+				background: transparent;
+				border: none;
+				color: var(--accent);
+				cursor: pointer;
+			}
+			.event-list {
+				list-style: none;
+				padding: 0;
+				margin: 0;
+			}
+			.event-list li {
+				border-bottom: 1px solid var(--stroke);
+				padding: 12px 0;
+				color: var(--text-muted);
+			}
+			.event-list strong {
+				display: block;
+				color: var(--text-main);
+				margin-bottom: 4px;
+			}
+			.event-list span {
+				font-size: 12px;
+			}
+			.disease-explanation-card h4 {
+				margin: 6px 0 4px;
+				color: var(--accent-soft);
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				font-size: 12px;
+			}
+			.disease-explanation-card p {
+				color: var(--text-muted);
+				line-height: 1.5;
+			}
+			.disease-tags {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				margin-top: 16px;
+			}
+			.disease-tags span {
+				border-radius: 999px;
+				padding: 6px 10px;
+				border: 1px solid var(--stroke);
+				font-size: 12px;
+				color: var(--text-muted);
+			}
+			.health-factor-indicator {
+				position: absolute;
+				padding: 8px 12px;
+				border-radius: 10px;
+				font-size: 12px;
+				font-weight: 600;
+				z-index: 100;
+				backdrop-filter: blur(3px);
+				animation: pulse 2s infinite;
+			}
+			@keyframes pulse {
+				0% { transform: scale(1); opacity: 0.9; }
+				50% { transform: scale(1.05); opacity: 1; }
+				100% { transform: scale(1); opacity: 0.9; }
+			}
+			.smoking-indicator { background: rgba(255, 60, 106, 0.25); border: 1px solid rgba(255,60,106,0.5); color: var(--text-main); top: 18px; left: 18px; }
+			.cholesterol-indicator { background: rgba(243, 201, 106, 0.25); border: 1px solid rgba(243,201,106,0.5); color: var(--text-main); top: 62px; left: 18px; }
+			.bp-indicator { background: rgba(111, 227, 199, 0.2); border: 1px solid rgba(111,227,199,0.5); color: var(--text-main); top: 106px; left: 18px; }
+			.alcohol-indicator { background: rgba(147, 112, 219, 0.25); border: 1px solid rgba(147,112,219,0.5); color: var(--text-main); top: 150px; left: 18px; }
+			.rhythm-indicator { background: rgba(84, 160, 255, 0.3); border: 1px solid rgba(84,160,255,0.45); color: var(--text-main); top: 194px; left: 18px; }
+		</style>
+		<script>
+		(function () {
+			const params = new URLSearchParams(window.location.search || '');
+
+			const toBool = (name, defaultVal = false) => {
+				const v = params.get(name);
+				if (v === null) return defaultVal;
+				return v === '1' || v === 'true';
+			};
+
+			const toNumber = (name, defaultVal = 0) => {
+				const raw = params.get(name);
+				if (raw == null) return defaultVal;
+				const num = Number(raw);
+				return Number.isFinite(num) ? num : defaultVal;
+			};
+
+			window.HEART_VIEWER_CONFIG = {
+				state: params.get('state') || 'healthy',
+				progress: toNumber('progress', 0),
+				smoking: toBool('smoking', false),
+				bp: toBool('bp', false),
+				cholesterol: toBool('cholesterol', false),
+				alcohol: toBool('alcohol', false),
+				exercise: toBool('exercise', true),
+				bloodFlow: toBool('bloodFlow', false),
+				realism: toBool('realism', false),
+				rhythm: toBool('rhythm', true),
+				model: params.get('model') || 'closedheart',
+				tour: toBool('tour', false),
+			};
+
+			if (params.get('controls') === '0') {
+				document.documentElement.classList.add('hide-viewer-ui');
+				document.addEventListener('DOMContentLoaded', () => {
+					document.body.classList.add('hide-viewer-ui');
+				});
+			}
+		})();
+		</script>
+	</head>
+
+	<body>
+		<div id="heart-app">
+			<canvas id="threeCanvas"></canvas>
+			<div id="activate">
+				<div class="hud-card control-card">
+					<label>Disease State</label>
+					<select id="disease_state_select" class="pill-select">
+						<option value="healthy">Healthy</option>
+						<option value="atherosclerosis">Atherosclerosis</option>
+						<option value="valve_stenosis">Valve Stenosis</option>
+						<option value="myocardial_infarction">Myocardial Infarction</option>
+					</select>
+					
+					<label style="margin-top: 20px;">Progression</label>
+					<input type="range" id="progression_slider" min="0" max="100" value="0">
+					<div class="range-value"><span>0%</span><span>100%</span></div>
+					<div class="toggle-grid">
+						<input type="checkbox" id="factor_smoking">
+						<label for="factor_smoking">Smoking</label>
+						<input type="checkbox" id="factor_bp">
+						<label for="factor_bp">High BP</label>
+						<input type="checkbox" id="factor_cholesterol">
+						<label for="factor_cholesterol">Cholesterol</label>
+						<input type="checkbox" id="factor_alcohol">
+						<label for="factor_alcohol">Alcohol</label>
+						<input type="checkbox" id="factor_exercise" checked>
+						<label for="factor_exercise">Exercise</label>
+						<input type="checkbox" id="toggle_blood_flow">
+						<label for="toggle_blood_flow">Blood Flow</label>
+						<input type="checkbox" id="toggle_realism">
+						<label for="toggle_realism">Realism</label>
+						<input type="checkbox" id="toggle_rhythm" checked>
+						<label for="toggle_rhythm">Rhythm</label>
+					</div>
+					
+					<div id="risk_indicator">
+						<div>Risk: <span id="risk_indicator_value">0%</span></div>
+						<div id="risk_indicator_detail" style="font-size: 12px; margin-top: 4px; color: rgba(255,255,255,0.7);"></div>
+				
+				<label style="margin-top: 20px;">Progression</label>
+				<input type="range" id="progression_slider" min="0" max="100" value="0">
+				<div class="range-value"><span>0%</span><span>100%</span></div>
+				<div class="toggle-grid">
+					<input type="checkbox" id="factor_smoking">
+					<label for="factor_smoking">Smoking</label>
+					<input type="checkbox" id="factor_bp">
+					<label for="factor_bp">High BP</label>
+					<input type="checkbox" id="factor_cholesterol">
+					<label for="factor_cholesterol">Cholesterol</label>
+					<input type="checkbox" id="factor_alcohol">
+					<label for="factor_alcohol">Alcohol</label>
+					<input type="checkbox" id="factor_exercise" checked>
+					<label for="factor_exercise">Exercise</label>
+					<input type="checkbox" id="toggle_blood_flow">
+					<label for="toggle_blood_flow">Blood Flow</label>
+					<input type="checkbox" id="toggle_realism">
+					<label for="toggle_realism">Realism</label>
+					<input type="checkbox" id="toggle_rhythm" checked>
+					<label for="toggle_rhythm">Rhythm</label>
+				</div>
+			</div>
+			<div class="control-actions">
+				<button id="move_heart_btn" class="button">Open/Close Heart</button>
+				<button id="guided_tour_btn" class="button">Guided Tour</button>
+				<button id="hide_dots_btn" class="button">Hide/Show Dots</button>
+			</div>
+										<label for="toggle_blood_flow">Blood Flow</label>
+										<input type="checkbox" id="toggle_realism">
+										<label for="toggle_realism">Realism</label>
+										<input type="checkbox" id="toggle_rhythm" checked>
+										<label for="toggle_rhythm">Rhythm</label>
+									</div>
+								</div>
+								<div class="control-actions">
+									<button id="move_heart_btn" class="button">Open/Close Heart</button>
+									<button id="guided_tour_btn" class="button" style="background: linear-gradient(130deg, #6fe3c7, #4dddb7); color:#05131e;">Guided Tour</button>
+									<button id="hide_dots_btn" class="button" style="background: rgba(255,255,255,0.08); border: 1px solid var(--stroke); color: var(--text-main);">Hide/Show Dots</button>
+								</div>
+							</div>
+						</div>
+					</article>
+					<article class="card">
+						<h3>Condition insights</h3>
+						<div id="annotation_panel" class="annotation-panel hidden">
+							<div style="display:flex; justify-content: space-between; align-items:center;">
+								<h3 id="annotation_title">Focus Area</h3>
+								<button id="annotation_close">Close ✕</button>
+							</div>
+							<p id="annotation_description">Select a hotspot to learn how structure and disease interact.</p>
+							<p id="annotation_disease" style="color: var(--text-main); font-weight: 500;">Disease narratives will populate here.</p>
+						</div>
+						<div id="risk_indicator" style="margin-top: 16px; font-size: 14px; color: var(--text-muted);">
+							Realtime risk updates mirror the lifestyle toggles and progression slider.
+						</div>
+					</article>
+				</section>
+				<section class="grid disease-grid">
+					<article class="card disease-explanation-card">
+						<h3>Detailed Disease Explanation</h3>
+						<h4>Current Selection</h4>
+						<h2 id="disease_summary_title" style="margin: 4px 0 8px;">Healthy Cardiovascular Function</h2>
+						<p id="disease_summary_body">A balanced heart rhythm with unrestricted coronary flow keeps oxygen delivery stable. Adjust the disease selector or ECG scenario to learn how pathology alters structure.</p>
+						<p id="disease_summary_ecg" style="margin-top: 14px; font-size: 14px;">ECG signature: Regular sinus rhythm, narrow QRS complexes.</p>
+						<div class="disease-tags">
+							<span>Hemodynamics</span>
+							<span>ECG Insight</span>
+							<span>3D Focus</span>
+						</div>
+					</article>
+					<article class="card">
+						<h3>Reference Cheat Sheet</h3>
+						<ul class="event-list">
+							<li>
+								<strong>Atherosclerosis</strong>
+								<span>Plaque narrows arteries, dampening distal perfusion and elevating ST depression risk.</span>
+							</li>
+							<li>
+								<strong>Valve Stenosis</strong>
+								<span>Calcified leaflets obstruct forward flow, producing systolic murmurs and hypertrophy.</span>
+							</li>
+							<li>
+								<strong>Myocardial Infarction</strong>
+								<span>Coronary blockage necroses myocardium, leading to ST elevation and wall-motion loss.</span>
+							</li>
+						</ul>
+					</article>
+				</section>
+			</main>
+		</div>
+		<script src="js/Tween.js"></script>
+		<script type="module" src="js/main.js"></script>
+
+	</body>
+</html>

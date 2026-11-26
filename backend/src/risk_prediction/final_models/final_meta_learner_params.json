@@ -1,0 +1,6 @@
+{
+  "hidden_dim_1": 64,
+  "hidden_dim_2": 32,
+  "dropout_rate": 0.3,
+  "lr": 0.001
+}
