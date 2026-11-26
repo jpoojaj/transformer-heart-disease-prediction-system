@@ -1,5 +1,7 @@
 # 🫀 Transformer Heart Disease Prediction System
 
+> ⚠️ **Demo project, not medical advice. Please do not enter real personal health data.**
+
 **Cardiovascular risk prediction with a Transformer + LightGBM + Random Forest stacking ensemble, feature selection by a Genetic Algorithm, tuning by Particle Swarm Optimization, and a full Streamlit web app.**
 
 Enter a few health numbers (age, blood pressure, cholesterol, BMI, lifestyle) and get a 0 to 100% risk score, a risk level, and personalised advice.
