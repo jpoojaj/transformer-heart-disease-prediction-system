@@ -1,0 +1,15 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+streamlit>=1.40
+pandas
+numpy
+scipy
+scikit-learn
+lightgbm
+joblib
+optuna
+matplotlib
+seaborn
+altair
+pillow
+python-dotenv
+torch
